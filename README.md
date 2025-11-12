@@ -51,9 +51,13 @@ See [docs/USAGE.md](docs/USAGE.md) for complete documentation.
 
 qc_results/
 ├── fastqc_raw/ # Quality reports for raw reads
+
 ├── fastqc_trimmed/ # Quality reports for trimmed reads
+
 ├── trimmed/PE/ # Trimmed paired-end reads
+
 ├── logs/ # Processing logs
+
 └── qc_summary.txt # Summary report
 
 
