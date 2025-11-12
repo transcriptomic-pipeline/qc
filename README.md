@@ -1,8 +1,9 @@
-# qc
-Quality assessment and control using FastQC and Trimmomatic
-# QC Module - RNA-seq Quality Control Pipeline
-
+# qc Module - RNA-seq Quality Control Pipeline
 A comprehensive quality control pipeline for RNA-seq data using FastQC and Trimmomatic.
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
 
 ## Features
 
