@@ -1,0 +1,16 @@
+config/install_paths.conf
+*.tmp
+*.log
+temp/
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+qc_results/
+*_output/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
