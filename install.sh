@@ -16,7 +16,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Download URLs
 FASTQC_URL="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip"
-TRIMMOMATIC_URL="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip"
+TRIMMOMATIC_URL="https://github.com/usadellab/Trimmomatic/releases/download/v0.40/Trimmomatic-0.40.zip"
 
 # Default installation directory (will be overridden by user input)
 DEFAULT_INSTALL_DIR="${HOME}/transcriptomic_analysis/softwares"
@@ -409,7 +409,7 @@ install_trimmomatic() {
     # Move jar and adapters
     cp Trimmomatic-0.39/trimmomatic-0.39.jar "${TRIMMOMATIC_DIR}/trimmomatic.jar"
     
-    # Copy adapters
+    # Copy adapters - OVERWRITE any existing ones
     rm -rf "${TRIMMOMATIC_DIR}/adapters"
     cp -r Trimmomatic-0.39/adapters "${TRIMMOMATIC_DIR}/"
     
@@ -421,8 +421,10 @@ java -jar "${TRIMMOMATIC_DIR}/trimmomatic.jar" "\$@"
 EOF
     chmod +x "${BIN_DIR}/trimmomatic"
     
-    # Copy adapters to module config directory
+    # Update module config adapters with official Trimmomatic adapters
+    # This REPLACES any fallback adapters that were in the repo
     mkdir -p "${SCRIPT_DIR}/config/adapters"
+    log_info "Updating module adapter files with official Trimmomatic adapters..."
     cp "${TRIMMOMATIC_DIR}/adapters/"*.fa "${SCRIPT_DIR}/config/adapters/" 2>/dev/null || true
     
     # Cleanup
@@ -430,7 +432,7 @@ EOF
     
     log_success "Trimmomatic installed to ${TRIMMOMATIC_DIR}"
     log_info "Adapter files: ${TRIMMOMATIC_DIR}/adapters/"
-    log_info "Adapters copied to: ${SCRIPT_DIR}/config/adapters/"
+    log_success "Module adapter files updated at: ${SCRIPT_DIR}/config/adapters/"
     
     # Verify installation
     if java -jar "${TRIMMOMATIC_DIR}/trimmomatic.jar" -version >/dev/null 2>&1; then
@@ -441,6 +443,7 @@ EOF
         return 1
     fi
 }
+
 
 # Update PATH in shell configuration
 update_path() {
