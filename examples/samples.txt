@@ -1,0 +1,8 @@
+# Sample list for QC processing
+# One sample ID per line
+# Lines starting with # are comments
+
+normal_sample1
+normal_sample2
+tumor_sample1
+tumor_sample2
