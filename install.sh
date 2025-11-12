@@ -19,7 +19,7 @@ FASTQC_URL="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.
 TRIMMOMATIC_URL="https://github.com/usadellab/Trimmomatic/releases/download/v0.40/Trimmomatic-0.40.zip"
 
 # Default installation directory (will be overridden by user input)
-DEFAULT_INSTALL_DIR="${HOME}/transcriptomic_analysis/softwares"
+DEFAULT_INSTALL_DIR="${HOME}/softwares"
 INSTALL_BASE_DIR=""
 FASTQC_DIR=""
 TRIMMOMATIC_DIR=""
@@ -55,7 +55,7 @@ prompt_install_directory() {
     log_info "Choose installation directory for QC tools"
     echo ""
     echo "Recommended options:"
-    echo "  1) ${HOME}/transcriptomic_analysis/softwares (recommended for user-specific installation)"
+    echo "  1) ${HOME}/softwares (recommended for user-specific installation)"
     echo "  2) /opt/qc-tools (system-wide, requires sudo)"
     echo "  3) Custom directory"
     echo ""
@@ -63,7 +63,7 @@ prompt_install_directory() {
     
     case "${DIR_CHOICE:-1}" in
         1)
-            INSTALL_BASE_DIR="${HOME}/transcriptomic_analysis/softwares"
+            INSTALL_BASE_DIR="${HOME}/softwares"
             ;;
         2)
             INSTALL_BASE_DIR="/opt/qc-tools"
@@ -377,12 +377,19 @@ install_fastqc() {
 
 # Check Trimmomatic
 check_trimmomatic() {
-    if command_exists trimmomatic; then
-        log_success "Trimmomatic found"
-        return 0
-    elif [ -f "${TRIMMOMATIC_DIR}/trimmomatic.jar" ]; then
-        log_success "Trimmomatic jar found at ${TRIMMOMATIC_DIR}"
-        return 0
+    # Check if trimmomatic command exists AND jar file is valid
+    if command_exists trimmomatic && [ -f "${TRIMMOMATIC_DIR}/trimmomatic.jar" ]; then
+        # Verify it actually works
+        if java -jar "${TRIMMOMATIC_DIR}/trimmomatic.jar" -version >/dev/null 2>&1; then
+            log_success "Trimmomatic found and verified"
+            return 0
+        else
+            log_warning "Trimmomatic command exists but JAR is broken"
+            # Clean up broken installation
+            rm -f "${BIN_DIR}/trimmomatic"
+            rm -rf "${TRIMMOMATIC_DIR}"
+            return 1
+        fi
     else
         log_warning "Trimmomatic not found"
         return 1
@@ -393,25 +400,28 @@ install_trimmomatic() {
     log_info "Installing Trimmomatic..."
     log_info "Downloading from: ${TRIMMOMATIC_URL}"
     
+    # Version number for consistency
+    local TRIMMO_VERSION="0.40"
+    
     # Create Trimmomatic directory
     mkdir -p "${TRIMMOMATIC_DIR}"
     
     # Download Trimmomatic
     cd /tmp
-    if ! wget -q --show-progress "$TRIMMOMATIC_URL" -O Trimmomatic-0.39.zip; then
+    if ! wget -q --show-progress "$TRIMMOMATIC_URL" -O "Trimmomatic-${TRIMMO_VERSION}.zip"; then
         log_error "Failed to download Trimmomatic"
         return 1
     fi
     
     # Extract
-    unzip -q Trimmomatic-0.39.zip
+    unzip -q "Trimmomatic-${TRIMMO_VERSION}.zip"
     
     # Move jar and adapters
-    cp Trimmomatic-0.39/trimmomatic-0.39.jar "${TRIMMOMATIC_DIR}/trimmomatic.jar"
+    cp "Trimmomatic-${TRIMMO_VERSION}/trimmomatic-${TRIMMO_VERSION}.jar" "${TRIMMOMATIC_DIR}/trimmomatic.jar"
     
     # Copy adapters - OVERWRITE any existing ones
     rm -rf "${TRIMMOMATIC_DIR}/adapters"
-    cp -r Trimmomatic-0.39/adapters "${TRIMMOMATIC_DIR}/"
+    cp -r "Trimmomatic-${TRIMMO_VERSION}/adapters" "${TRIMMOMATIC_DIR}/"
     
     # Create wrapper script in bin directory
     cat > "${BIN_DIR}/trimmomatic" << EOF
@@ -421,14 +431,14 @@ java -jar "${TRIMMOMATIC_DIR}/trimmomatic.jar" "\$@"
 EOF
     chmod +x "${BIN_DIR}/trimmomatic"
     
-    # Update module config adapters with official Trimmomatic adapters
+    # Update module adapter files with official Trimmomatic adapters
     # This REPLACES any fallback adapters that were in the repo
     mkdir -p "${SCRIPT_DIR}/config/adapters"
     log_info "Updating module adapter files with official Trimmomatic adapters..."
     cp "${TRIMMOMATIC_DIR}/adapters/"*.fa "${SCRIPT_DIR}/config/adapters/" 2>/dev/null || true
     
     # Cleanup
-    rm -rf Trimmomatic-0.39*
+    rm -rf "Trimmomatic-${TRIMMO_VERSION}"*
     
     log_success "Trimmomatic installed to ${TRIMMOMATIC_DIR}"
     log_info "Adapter files: ${TRIMMOMATIC_DIR}/adapters/"
@@ -440,10 +450,12 @@ EOF
         return 0
     else
         log_error "Trimmomatic installation verification failed"
+        log_error "Cleaning up failed installation..."
+        rm -f "${BIN_DIR}/trimmomatic"
+        rm -rf "${TRIMMOMATIC_DIR}"
         return 1
     fi
 }
-
 
 # Update PATH in shell configuration
 update_path() {
@@ -583,10 +595,10 @@ display_summary() {
     echo ""
     log_info "Quick Start:"
     echo "  cd ${SCRIPT_DIR}"
-    echo "  bash scripts/qc_pipeline.sh -i <input_dir> -o <output_dir> -t 8"
+    echo "  bash run_qc.sh -i <input_dir> -o <output_dir> -t 8"
     echo ""
     log_info "For paired-end reads add: --paired"
-    log_info "For help: bash scripts/qc_pipeline.sh -h"
+    log_info "For help: bash run_qc.sh -h"
     echo ""
     log_info "To uninstall, simply delete: ${INSTALL_BASE_DIR}"
     echo ""
@@ -602,7 +614,7 @@ main() {
     echo "This script will install:"
     echo "  - Java (OpenJDK)"
     echo "  - FastQC v0.12.1"
-    echo "  - Trimmomatic v0.39"
+    echo "  - Trimmomatic v0.40"
     echo "  - Perl (if needed)"
     echo ""
     
@@ -694,8 +706,7 @@ main() {
     update_path
     
     # Make scripts executable
-    chmod +x "${SCRIPT_DIR}/scripts/"*.sh 2>/dev/null || true
-    chmod +x "${SCRIPT_DIR}/scripts/"*.pl 2>/dev/null || true
+    chmod +x "${SCRIPT_DIR}/"*.sh 2>/dev/null || true
     log_success "Scripts configured"
     
     # Save configuration
@@ -735,7 +746,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Examples:"
             echo "  $0"
-            echo "  $0 --install-dir /home/user/transcriptomic_analysis/softwares"
+            echo "  $0 --install-dir /home/user/softwares"
             echo "  $0 --install-dir /opt/qc-tools"
             exit 0
             ;;
