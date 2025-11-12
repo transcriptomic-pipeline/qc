@@ -17,6 +17,7 @@ chmod +x install.sh run_qc.sh
 - FastQC analysis before and after trimming
 - Comprehensive logging
 - User-defined installation directory
+- **Fallback adapter files** - Works even without installation using repo adapters
 
 ## Installation
 
