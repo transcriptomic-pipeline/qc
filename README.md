@@ -126,19 +126,30 @@ qc_results/
 
 Required:
 -i, --input Input directory containing FASTQ files
+
 -o, --output Output directory for QC results
 
 Optional:
 -s, --samples Sample list file (one sample ID per line)
+
 -t, --threads Number of threads (default: 8)
+
 -a, --adapters Adapter file for Trimmomatic
+
 --phred Phred score encoding (33 or 64, default: 33)
+
 --minlen Minimum read length after trimming (default: 70)
+
 --leading Minimum quality at read start (default: 3)
+
 --trailing Minimum quality at read end (default: 3)
+
 --slidingwindow Sliding window quality cutoff (default: 4:20)
+
 --fastqc-only Run only FastQC, skip trimming
+
 --single-end Process as single-end reads
+
 -h, --help Show help message
 
 ## Examples
@@ -146,34 +157,53 @@ Optional:
 ### Example 1: Standard RNA-seq QC
 
 ./run_qc.sh
+
 -i /home/user/DATA/raw_fastq
+
 -o /home/user/RESULTS/qc_output
+
 -t 20
 
 ### Example 2: Process Tumor/Normal Samples
 
 cat > samples.txt << EOF
+
 normal_sample1
+
 normal_sample2
+
 tumor_sample1
+
 tumor_sample2
+
 EOF
 
 ./run_qc.sh
+
 -i /data/raw_fastq
+
 -o /data/qc_results
+
 -s samples.txt
+
 -t 20
 
 ### Example 3: Strict Quality Filtering
 
 ./run_qc.sh
+
 -i raw_data/
+
 -o qc_strict/
+
 --minlen 100
+
 --leading 20
+
 --trailing 20
+
 --slidingwindow 4:25
+
 -t 20
 
 ## Troubleshooting
