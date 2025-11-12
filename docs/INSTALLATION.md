@@ -25,6 +25,14 @@ Choose where to install tools:
 - FastQC 0.12.1
 - Trimmomatic 0.39
 - wget, unzip
+## Adapter Files
+
+The repository includes fallback Illumina adapter files in `config/adapters/`. During Trimmomatic installation, these will be replaced with the official adapter files from Trimmomatic 0.39.
+
+**Adapter priority:**
+1. Official Trimmomatic adapters (after installation)
+2. Fallback adapters from repository (if Trimmomatic not installed)
+3. Custom adapter file (specified with `-a` option)
 
 ## Verification
 
