@@ -260,7 +260,7 @@ After QC, use trimmed reads from `qc_results/trimmed/PE/` for:
 3. **Differential Expression**: DESeq2, edgeR
 4. **Variant Calling**: GATK, Mutect2
 
-Or you can readily use our transcriptomic-pipeline (https://github.com/transcriptomic-pipeline) for downstream transcriptomic analysis.
+Or you can readily use our [transcriptomic-pipeline] (https://github.com/transcriptomic-pipeline) for downstream transcriptomic analysis.
 
 ### Example Alignment
 
