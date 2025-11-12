@@ -400,28 +400,32 @@ install_trimmomatic() {
     log_info "Installing Trimmomatic..."
     log_info "Downloading from: ${TRIMMOMATIC_URL}"
     
-    # Version number for consistency
-    local TRIMMO_VERSION="0.40"
-    
     # Create Trimmomatic directory
     mkdir -p "${TRIMMOMATIC_DIR}"
     
     # Download Trimmomatic
     cd /tmp
-    if ! wget -q --show-progress "$TRIMMOMATIC_URL" -O "Trimmomatic-${TRIMMO_VERSION}.zip"; then
+    if ! wget -q --show-progress "$TRIMMOMATIC_URL" -O Trimmomatic-0.40.zip; then
         log_error "Failed to download Trimmomatic"
         return 1
     fi
     
-    # Extract
-    unzip -q "Trimmomatic-${TRIMMO_VERSION}.zip"
+    # Extract (files extract directly to current directory, not into a subdirectory)
+    unzip -q Trimmomatic-0.40.zip
     
-    # Move jar and adapters
-    cp "Trimmomatic-${TRIMMO_VERSION}/trimmomatic-${TRIMMO_VERSION}.jar" "${TRIMMOMATIC_DIR}/trimmomatic.jar"
+    # Verify extraction
+    if [ ! -f "trimmomatic-0.40.jar" ]; then
+        log_error "trimmomatic-0.40.jar not found after extraction"
+        rm -f Trimmomatic-0.40.zip
+        return 1
+    fi
+    
+    # Move jar file
+    cp trimmomatic-0.40.jar "${TRIMMOMATIC_DIR}/trimmomatic.jar"
     
     # Copy adapters - OVERWRITE any existing ones
     rm -rf "${TRIMMOMATIC_DIR}/adapters"
-    cp -r "Trimmomatic-${TRIMMO_VERSION}/adapters" "${TRIMMOMATIC_DIR}/"
+    cp -r adapters "${TRIMMOMATIC_DIR}/"
     
     # Create wrapper script in bin directory
     cat > "${BIN_DIR}/trimmomatic" << EOF
@@ -437,8 +441,9 @@ EOF
     log_info "Updating module adapter files with official Trimmomatic adapters..."
     cp "${TRIMMOMATIC_DIR}/adapters/"*.fa "${SCRIPT_DIR}/config/adapters/" 2>/dev/null || true
     
-    # Cleanup
-    rm -rf "Trimmomatic-${TRIMMO_VERSION}"*
+    # Cleanup temporary files
+    rm -f trimmomatic-0.40.jar Trimmomatic-0.40.zip LICENSE.txt
+    rm -rf adapters
     
     log_success "Trimmomatic installed to ${TRIMMOMATIC_DIR}"
     log_info "Adapter files: ${TRIMMOMATIC_DIR}/adapters/"
