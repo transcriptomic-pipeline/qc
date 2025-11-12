@@ -38,8 +38,11 @@ First stable release of the QC Module - a comprehensive RNA-seq quality control 
 ## Installation
 
 git clone https://github.com/transcriptomic-pipeline/qc.git
+
 cd qc
+
 chmod +x install.sh run_qc.sh
+
 ./install.sh
 
 ## Quick Start
