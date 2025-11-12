@@ -234,14 +234,28 @@ detect_adapters() {
         ADAPTER_FILE="${ADAPTER_DIR}/TruSeq3-SE.fa"
     fi
     
+    # Check if adapter exists in Trimmomatic installation directory
     if [ ! -f "$ADAPTER_FILE" ]; then
-        log_warning "Adapter file not found: $ADAPTER_FILE"
-        log_info "Using default from config directory"
-        ADAPTER_FILE="${SCRIPT_DIR}/config/adapters/TruSeq3-PE.fa"
+        log_warning "Adapter file not found in Trimmomatic directory: $ADAPTER_FILE"
+        
+        # Fallback to module config directory (repo fallback adapters)
+        if [ "$PAIRED_END" = true ]; then
+            ADAPTER_FILE="${SCRIPT_DIR}/config/adapters/TruSeq3-PE.fa"
+        else
+            ADAPTER_FILE="${SCRIPT_DIR}/config/adapters/TruSeq3-SE.fa"
+        fi
+        
+        if [ -f "$ADAPTER_FILE" ]; then
+            log_info "Using fallback adapter file from module: $ADAPTER_FILE"
+        else
+            log_error "No adapter file found. Please run install.sh or provide adapter file with -a option"
+            exit 1
+        fi
+    else
+        log_info "Using adapter file: $ADAPTER_FILE"
     fi
-    
-    log_info "Using adapter file: $ADAPTER_FILE"
 }
+
 
 # Create output directory structure
 create_output_dirs() {
