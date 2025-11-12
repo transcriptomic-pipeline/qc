@@ -20,6 +20,7 @@ A comprehensive quality control pipeline for RNA-seq data using FastQC and Trimm
 ### 1. Clone the Repository
 
 git clone https://github.com/transcriptomic-pipeline/qc.git
+
 cd qc
 
 ### 2. Make Scripts Executable
