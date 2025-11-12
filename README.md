@@ -106,12 +106,19 @@ See [docs/USAGE.md](docs/USAGE.md) for complete usage documentation.
 ## Output Structure
 
 qc_results/
+
 ├── fastqc_raw/ # FastQC reports for raw reads
+
 ├── fastqc_trimmed/ # FastQC reports for trimmed reads
+
 ├── trimmed/
+
 │ ├── PE/ # Paired-end trimmed reads (use for analysis)
+
 │ └── UP/ # Unpaired trimmed reads
+
 ├── logs/ # Processing logs
+
 └── qc_summary.txt # Summary report
 
 ## Command-Line Options
