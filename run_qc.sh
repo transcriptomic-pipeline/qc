@@ -256,7 +256,6 @@ detect_adapters() {
     fi
 }
 
-
 # Create output directory structure
 create_output_dirs() {
     log_info "Creating output directory structure..."
@@ -353,6 +352,34 @@ run_trimmomatic_se() {
     log_success "Trimmomatic completed for ${sample_id}"
 }
 
+# Detect R2 file based on R1 file pattern
+find_r2_file() {
+    local r1_file=$1
+    local r2_file=""
+    
+    # Try different patterns to find R2
+    if [[ "$r1_file" =~ _R1\. ]] || [[ "$r1_file" =~ _R1_ ]]; then
+        r2_file=$(echo "$r1_file" | sed 's/_R1/_R2/g')
+    elif [[ "$r1_file" =~ _1\. ]] || [[ "$r1_file" =~ _1_ ]]; then
+        r2_file=$(echo "$r1_file" | sed 's/_1\./_2./g' | sed 's/_1_/_2_/g')
+    fi
+    
+    echo "$r2_file"
+}
+
+# Detect naming pattern
+detect_pattern() {
+    local filename=$1
+    
+    if [[ "$filename" =~ _R1 ]]; then
+        echo "_R1/_R2"
+    elif [[ "$filename" =~ _1\. ]] || [[ "$filename" =~ _1_ ]]; then
+        echo "_1/_2"
+    else
+        echo "unknown"
+    fi
+}
+
 # Process samples from file
 process_samples_from_file() {
     log_info "Processing samples from file: $SAMPLE_FILE"
@@ -376,20 +403,24 @@ process_samples_from_file() {
         log_info "========================================="
         
         if [ "$PAIRED_END" = true ]; then
-            # Look for paired-end files
-            local r1_file=$(find "$INPUT_DIR" -name "${sample_id}*R1*.fastq" -o -name "${sample_id}*R1*.fq" -o -name "${sample_id}*R1*.fastq.gz" -o -name "${sample_id}*R1*.fq.gz" -o -name "${sample_id}*_1.fastq" -o -name "${sample_id}*_1.fq" | head -n 1)
-            local r2_file=$(echo "$r1_file" | sed 's/R1/R2/g' | sed 's/_1\./_2./g')
+            # Look for paired-end files with flexible patterns
+            local r1_file=$(find "$INPUT_DIR" -type f \( -name "${sample_id}*_R1*.fastq" -o -name "${sample_id}*_R1*.fq" -o -name "${sample_id}*_R1*.fastq.gz" -o -name "${sample_id}*_R1*.fq.gz" -o -name "${sample_id}*_1.fastq" -o -name "${sample_id}*_1.fq" -o -name "${sample_id}*_1.fastq.gz" -o -name "${sample_id}*_1.fq.gz" \) | head -n 1)
             
             if [ -z "$r1_file" ] || [ ! -f "$r1_file" ]; then
                 log_error "R1 file not found for sample: ${sample_id}"
                 continue
             fi
             
+            # Find corresponding R2 file
+            local r2_file=$(find_r2_file "$r1_file")
+            local pattern=$(detect_pattern "$r1_file")
+            
             if [ ! -f "$r2_file" ]; then
-                log_error "R2 file not found for sample: ${sample_id}"
+                log_error "R2 file not found for sample: ${sample_id} (expected pattern: ${pattern})"
                 continue
             fi
             
+            log_info "Detected naming pattern: ${pattern}"
             log_info "R1: $r1_file"
             log_info "R2: $r2_file"
             
@@ -399,7 +430,7 @@ process_samples_from_file() {
             fi
         else
             # Look for single-end files
-            local input_file=$(find "$INPUT_DIR" -name "${sample_id}*.fastq" -o -name "${sample_id}*.fq" -o -name "${sample_id}*.fastq.gz" -o -name "${sample_id}*.fq.gz" | head -n 1)
+            local input_file=$(find "$INPUT_DIR" -type f \( -name "${sample_id}*.fastq" -o -name "${sample_id}*.fq" -o -name "${sample_id}*.fastq.gz" -o -name "${sample_id}*.fq.gz" \) | head -n 1)
             
             if [ -z "$input_file" ] || [ ! -f "$input_file" ]; then
                 log_error "Input file not found for sample: ${sample_id}"
@@ -424,11 +455,12 @@ process_all_samples() {
     log_info "Processing all samples in directory: $INPUT_DIR"
     
     if [ "$PAIRED_END" = true ]; then
-        # Find all R1 files
-        local r1_files=$(find "$INPUT_DIR" -name "*R1*.fastq" -o -name "*R1*.fq" -o -name "*R1*.fastq.gz" -o -name "*R1*.fq.gz" -o -name "*_1.fastq" -o -name "*_1.fq" | sort)
+        # Find all R1 files (supports both _R1 and _1 patterns)
+        local r1_files=$(find "$INPUT_DIR" -type f \( -name "*_R1*.fastq" -o -name "*_R1*.fq" -o -name "*_R1*.fastq.gz" -o -name "*_R1*.fq.gz" -o -name "*_1.fastq" -o -name "*_1.fq" -o -name "*_1.fastq.gz" -o -name "*_1.fq.gz" \) | sort)
         
         if [ -z "$r1_files" ]; then
             log_error "No paired-end FASTQ files found in $INPUT_DIR"
+            log_info "Looking for files with patterns: *_R1*.fastq, *_R1*.fq, *_1.fastq, *_1.fq (and .gz versions)"
             exit 1
         fi
         
@@ -439,13 +471,14 @@ process_all_samples() {
             
             # Extract sample ID
             local basename=$(basename "$r1_file")
-            local sample_id=$(echo "$basename" | sed 's/_R1.*//g' | sed 's/_1\..*//g')
+            local sample_id=$(echo "$basename" | sed -E 's/_(R1|1).*//g')
             
             # Find corresponding R2 file
-            local r2_file=$(echo "$r1_file" | sed 's/R1/R2/g' | sed 's/_1\./_2./g')
+            local r2_file=$(find_r2_file "$r1_file")
+            local pattern=$(detect_pattern "$r1_file")
             
             if [ ! -f "$r2_file" ]; then
-                log_warning "R2 file not found for $r1_file, skipping..."
+                log_warning "R2 file not found for $r1_file (expected pattern: ${pattern}), skipping..."
                 continue
             fi
             
@@ -453,6 +486,7 @@ process_all_samples() {
             log_info "========================================="
             log_info "Processing sample ${sample_count}: ${sample_id}"
             log_info "========================================="
+            log_info "Detected naming pattern: ${pattern}"
             log_info "R1: $r1_file"
             log_info "R2: $r2_file"
             
@@ -465,7 +499,7 @@ process_all_samples() {
         log_success "Processed ${sample_count} samples"
     else
         # Find all single-end files
-        local input_files=$(find "$INPUT_DIR" -name "*.fastq" -o -name "*.fq" -o -name "*.fastq.gz" -o -name "*.fq.gz" | sort)
+        local input_files=$(find "$INPUT_DIR" -type f \( -name "*.fastq" -o -name "*.fq" -o -name "*.fastq.gz" -o -name "*.fq.gz" \) | sort)
         
         if [ -z "$input_files" ]; then
             log_error "No FASTQ files found in $INPUT_DIR"
@@ -479,7 +513,7 @@ process_all_samples() {
             
             # Extract sample ID
             local basename=$(basename "$input_file")
-            local sample_id=$(echo "$basename" | sed 's/\.fastq.*//g' | sed 's/\.fq.*//g')
+            local sample_id=$(echo "$basename" | sed -E 's/\.(fastq|fq)(\.gz)?$//g')
             
             echo ""
             log_info "========================================="
