@@ -126,32 +126,32 @@ qc_results/
 ## Command-Line Options
 
 Required:
--i, --input Input directory containing FASTQ files
+-i,   --input Input directory containing FASTQ files
 
--o, --output Output directory for QC results
+-o,   --output Output directory for QC results
 
 Optional:
--s, --samples Sample list file (one sample ID per line)
+-s,   --samples Sample list file (one sample ID per line)
 
--t, --threads Number of threads (default: 8)
+-t,   --threads Number of threads (default: 8)
 
--a, --adapters Adapter file for Trimmomatic
+-a,   --adapters Adapter file for Trimmomatic
 
---phred Phred score encoding (33 or 64, default: 33)
+--phred   Phred score encoding (33 or 64, default: 33)
 
---minlen Minimum read length after trimming (default: 70)
+--minlen   Minimum read length after trimming (default: 70)
 
---leading Minimum quality at read start (default: 3)
+--leading   Minimum quality at read start (default: 3)
 
---trailing Minimum quality at read end (default: 3)
+--trailing   Minimum quality at read end (default: 3)
 
---slidingwindow Sliding window quality cutoff (default: 4:20)
+--slidingwindow   Sliding window quality cutoff (default: 4:20)
 
---fastqc-only Run only FastQC, skip trimming
+--fastqc-only   Run only FastQC, skip trimming
 
---single-end Process as single-end reads
+--single-end   Process as single-end reads
 
--h, --help Show help message
+-h, --help   Show help message
 
 ## Examples
 
@@ -168,10 +168,15 @@ Optional:
 ### Example 2: Process Tumor/Normal Samples
 
 cat > samples.txt << EOF
+
 normal_sample1
+
 normal_sample2
+
 tumor_sample1
+
 tumor_sample2
+
 EOF
 
 ./run_qc.sh
