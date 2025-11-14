@@ -168,43 +168,27 @@ Optional:
 ### Example 2: Process Tumor/Normal Samples
 
 cat > samples.txt << EOF
-
 normal_sample1
-
 normal_sample2
-
 tumor_sample1
-
 tumor_sample2
-
 EOF
 
 ./run_qc.sh
-
 -i /data/raw_fastq
-
 -o /data/qc_results
-
 -s samples.txt
-
 -t 20
 
 ### Example 3: Strict Quality Filtering
 
 ./run_qc.sh
-
 -i raw_data/
-
 -o qc_strict/
-
 --minlen 100
-
 --leading 20
-
 --trailing 20
-
 --slidingwindow 4:25
-
 -t 20
 
 ## Troubleshooting
