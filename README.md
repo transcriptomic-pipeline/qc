@@ -3,7 +3,7 @@ A comprehensive quality control pipeline for RNA-seq data using FastQC and Trimm
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20-lightgrey)
 
 ## Features
 
