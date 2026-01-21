@@ -602,7 +602,7 @@ display_summary() {
     echo "  cd ${SCRIPT_DIR}"
     echo "  bash run_qc.sh -i <input_dir> -o <output_dir> -t 8"
     echo ""
-    log_info "For paired-end reads add: --paired"
+   #log_info "For paired-end reads add: --paired"
     log_info "For help: bash run_qc.sh -h"
     echo ""
     log_info "To uninstall, simply delete: ${INSTALL_BASE_DIR}"
