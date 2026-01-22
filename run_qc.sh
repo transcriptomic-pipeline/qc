@@ -471,7 +471,7 @@ process_all_samples() {
             
             # Extract sample ID
             local basename=$(basename "$r1_file")
-            local sample_id=$(echo "$basename" | sed -E 's/_(R1|1).*//g')
+            local sample_id=$(echo "$basename" | sed -E 's/(_R1|_1)\.(fastq|fq)(\.gz)?$//g')
             
             # Find corresponding R2 file
             local r2_file=$(find_r2_file "$r1_file")
